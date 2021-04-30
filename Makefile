@@ -14,6 +14,12 @@ prot:
 clean:
 	rm -rf e2448199_the1 prototype
 
+run:
+	./e2448199_the1 < input.txt > output.txt
+
+run_prot:
+	./prototype < input.txt > output.txt
+	
 all:
 	rm -rf e2448199_the1 prototype
 	sleep 1.5
