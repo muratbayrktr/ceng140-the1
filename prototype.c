@@ -97,21 +97,53 @@ int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MA
     }
 }
 
-int main(void) 
+void copy_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[MAXHEIGHT*MAXWIDTH], int copy_top_left_x, 
+                        int copy_top_left_y, int copy_bottom_right_x, int copy_bottom_right_y)
 {
-    /* function declarations */
-    void fill_image(int image[MAXHEIGHT][MAXWIDTH], int y, int x, int color);
-    int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MAXWIDTH]);
+    int i, j, k;
+    k = 0;
+    for (i = copy_top_left_y; i <= copy_bottom_right_y; i++) {
+        for (j = copy_top_left_x; j <= copy_bottom_right_x; j++){
+            copied_area[k] = image[i][j];
+            k++;
+        }
+    }
+    return ;
+}
 
-    /* variable declarations */
-    int i,j;
-    int image[MAXHEIGHT][MAXWIDTH];
-    char opcode;
+void paste_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[MAXHEIGHT*MAXWIDTH], int paste_top_left_x, 
+                        int paste_top_left_y, int paste_bottom_right_x, int paste_bottom_right_y)
+{
+    int i, j, k;
+    k = 0;
+    /* no need to check boundaries since when the iteration 
+    is exhausted, the iteration wont exceed limits of copied_area */
+    for (i = paste_top_left_y; i <= paste_bottom_right_y; i++) {
+        for (j = paste_top_left_x; j <=paste_bottom_right_x; j++){
+            image[i][j] = copied_area[k];
+            k++;
+        }
+    }
+    return ;
+}
 
+void print_array(int image[MAXHEIGHT][MAXWIDTH])
+{
+    int i, j;
+    for (i = 0; i < MAXHEIGHT; i++) 
+    {
+        for (j = 0; j < MAXHEIGHT; j++) 
+        {
+            printf("%d ",image[i][j]);
+        }
+        printf("\n");
+    }
+    return ;
+}
 
-        /* Taking inputs */
-
-    /* 1. taking values as an input to image array */
+void read_array(int image[MAXHEIGHT][MAXWIDTH]) 
+{
+    int i, j;
     for (i = 0; i < MAXHEIGHT; i++) 
     {
         for (j = 0; j < MAXHEIGHT; j++) 
@@ -121,6 +153,28 @@ int main(void)
             image[i][j] = read;
         }
     }
+    return ;
+}
+
+
+int main(void) 
+{
+    /* function declarations */
+    void fill_image(int image[MAXHEIGHT][MAXWIDTH], int y, int x, int color);
+    int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MAXWIDTH]);
+    void print_array(int array[MAXHEIGHT][MAXWIDTH]);
+    void read_array(int array[MAXHEIGHT][MAXWIDTH]);
+    void copy_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[], int copy_x1, int copy_y1, int copy_x2, int copy_y2);
+    void paste_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[], int paste_x1, int paste_y1, int paste_x2, int paste_y2);
+
+    /* variable declarations */
+    int image[MAXHEIGHT][MAXWIDTH];
+    char opcode;
+
+        /* Taking inputs */
+
+    /* 1. taking values as an input to image array */
+    read_array(image);
 
     /* 2. taking operation code as an input */
     scanf(" %c", &opcode);
@@ -130,9 +184,11 @@ int main(void)
     {
         case 'F':
             {
-                /* take coordinates as in arrays */
+                /* local variable declarations */
                 int color;
                 int color_select[2], fill_coord[2];
+
+                /* take coordinates as in arrays */
                 scanf(" %d %d", &color_select[0], &color_select[1]);
                 scanf(" %d %d", &fill_coord[0], &fill_coord[1]);
 
@@ -143,20 +199,42 @@ int main(void)
                 fill_image(image, fill_coord[0], fill_coord[1], color);
 
                 /* print out the array after the process */
-                for (i = 0; i < MAXHEIGHT; i++) 
-                {
-                    for (j = 0; j < MAXHEIGHT; j++) 
-                    {
-                        printf("%d ",image[i][j]);
-                    }
-                    printf("\n");
-                }
+                print_array(image);
             
                 break;
             }
         case 'P':
-            {
-                /* code here */
+            {   /* local variable declarations */
+                int copy_x1,copy_y1,copy_x2,copy_y2,
+                paste_x1,paste_y1,paste_x2,paste_y2;
+                int copy_top_left_x, copy_top_left_y, copy_bottom_right_x, copy_bottom_right_y;
+                int paste_top_left_x, paste_top_left_y, paste_bottom_right_x, paste_bottom_right_y;
+                /* this array is for containing the area and passing it to the paste function */
+                int copied_area[MAXHEIGHT*MAXWIDTH];
+
+                /* take coordinates as in arrays */
+                scanf(" %d %d %d %d", &copy_y1,&copy_x1,&copy_y2,&copy_x2);
+                scanf(" %d %d %d %d", &paste_y1,&paste_x1,&paste_y2,&paste_x2);
+                /* define the top left and bottom rights */
+                copy_top_left_x = (copy_x1 < copy_x2) ? copy_x1 : copy_x2;
+                copy_bottom_right_x = (copy_x1 < copy_x2) ? copy_x2 : copy_x1;
+                copy_top_left_y = (copy_y1 < copy_y2) ? copy_y1 : copy_y2;
+                copy_bottom_right_y = (copy_y1 < copy_y2) ? copy_y2 : copy_y1;
+                paste_top_left_x = (paste_x1 < paste_x2) ? paste_x1 : paste_x2;
+                paste_bottom_right_x = (paste_x1 < paste_x2) ? paste_x2 : paste_x1;
+                paste_top_left_y = (paste_y1 < paste_y2) ? paste_y1 : paste_y2;
+                paste_bottom_right_y = (paste_y1 < paste_y2) ? paste_y2 : paste_y1;
+                {
+                    /* copy area from the desired coordinates and pass it to the 1-dim array */
+                    copy_area(image, copied_area, copy_top_left_x, copy_top_left_y, copy_bottom_right_x, copy_bottom_right_y);
+
+                    /* use 1-dim array to pass the area to the image from the desired coordinates */
+                    paste_area(image, copied_area, paste_top_left_x, paste_top_left_y, paste_bottom_right_x, paste_bottom_right_y);
+
+                    /* print out the array after the process */
+                    print_array(image);
+                }
+
                 break;
             }
         case 'R':
