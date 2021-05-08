@@ -10,3 +10,9 @@ Run:
 
 $~ make prot  
 $~ ./protoype < input.txt  
+
+
+Project is finalized.  
+It can be compiled and ran by  
+
+>$~ make all  
