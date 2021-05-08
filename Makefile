@@ -26,3 +26,4 @@ all:
 	$(CC) $(CFLAGS) $(LDFLAGS) e2448199_the1.c -o e2448199_the1
 	sleep 1
 	clear
+	./e2448199_the1 < input.txt > output.txt
