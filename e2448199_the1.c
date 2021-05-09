@@ -6,53 +6,61 @@
 
 void fill_image(int image[MAXHEIGHT][MAXWIDTH], 
                 int y, int x, 
-                int color)
+                int color_to_fill,int prev_color, int direction)
 {
-    /* store the old color */
-    int current_color = image[y][x];
-    /* change the color */
-    image[y][x] = color;
     /* boundary check */
-    if (y+1 > MAXHEIGHT || x+1 > MAXWIDTH || y-1 < 0 || x-1 < 0) return ;
+    if (y >= MAXHEIGHT || x >= MAXWIDTH || y < 0 || x < 0) return ;
+
+    
+    /* change the color */
+    if (image[y][x] == prev_color && image[y][x] != color_to_fill)
+    {
+        image[y][x] = color_to_fill;
+    }
+    else return;
+    
+    /* check the direction that you come, even if we call these functions
+    it won't go forever however it'll invade some space in the call stack. We don't want that. */
+
     /* left */
-    if (image[y][x-1] == current_color) {
-        fill_image(image, y, x-1, color);
-    }
+    if (direction != 3)
+        fill_image(image, y, x-1, color_to_fill, prev_color, 7);
+
     /* top-left */
-    if (image[y-1][x-1] == current_color) {
-        fill_image(image, y-1, x-1, color);
-    }
+    if (direction != 4)
+        fill_image(image, y-1, x-1, color_to_fill, prev_color, 0);
+
     /* top */
-    if (image[y-1][x] == current_color) {
-        fill_image(image, y-1, x, color);
-    }
+    if (direction != 5)    
+        fill_image(image, y-1, x, color_to_fill, prev_color, 1);
+
     /* top-right */
-    if (image[y-1][x+1] == current_color) {
-        fill_image(image, y-1, x+1, color);
-    }
+    if (direction != 6)
+        fill_image(image, y-1, x+1, color_to_fill, prev_color, 2);
+
     /* right */
-    if (image[y][x+1] == current_color) {
-        fill_image(image, y, x+1, color);
-    }
+    if (direction != 7)
+        fill_image(image, y, x+1, color_to_fill, prev_color, 3);
+
     /* bottom-right */
-    if (image[y+1][x+1] == current_color) {
-        fill_image(image, y+1, x+1, color);
-    }
+    if (direction != 0)
+        fill_image(image, y+1, x+1, color_to_fill, prev_color, 4);
+
     /* bottom */
-    if (image[y+1][x] == current_color) {
-        fill_image(image, y+1, x, color);
-    }
+    if (direction != 1)
+        fill_image(image, y+1, x, color_to_fill, prev_color, 5);
+
     /* bottom-left */
-    if (image[y+1][x-1] == current_color) {
-        fill_image(image, y+1, x-1, color);
-    }
+    if (direction != 2)
+        fill_image(image, y+1, x-1, color_to_fill, prev_color, 6);
+
     return ;
 }
 
 int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MAXWIDTH])
 {
     /* 
-    I could have coded it with 8 if's however then it would check 8 different situations
+    I could have coded it with 8 ifs and 1 else however then it would check 8 different situations
     and if the color is at 8. if then it would take time. 
 
     When it's done with 12 if's like this, the access is faster.
@@ -63,7 +71,7 @@ int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MA
     if (color_select[0] < 0) {
         if (color_select[1] < 0) {
             return 0;
-        } else if (color_select[1] > MAXWIDTH) {
+        } else if (color_select[1] >= MAXWIDTH) {
             return 2;
         } else {
             return 1;
@@ -71,23 +79,23 @@ int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MA
     } else if (color_select[1] < 0) {
         if (color_select[0] < 0) {
             return 0;
-        } else if (color_select[0] > MAXHEIGHT) {
+        } else if (color_select[0] >= MAXHEIGHT) {
             return 6;
         } else {
             return 7;
         }
-    } else if (color_select[0] > MAXHEIGHT) {
+    } else if (color_select[0] >= MAXHEIGHT) {
         if (color_select[1] < 0) {
             return 6;
-        } else if (color_select[1] > MAXWIDTH) {
+        } else if (color_select[1] >= MAXWIDTH) {
             return 4;
         } else {
             return 5;
         }
-    } else if (color_select[1] > MAXWIDTH) {
+    } else if (color_select[1] >= MAXWIDTH) {
         if (color_select[0] < 0) {
             return 2;
-        } else if (color_select[0] > MAXHEIGHT) {
+        } else if (color_select[0] >= MAXHEIGHT) {
             return 4;
         } else {
             return 3;
@@ -96,6 +104,10 @@ int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MA
         return image[color_select[0]][color_select[1]];
     }
 }
+
+/* for simple copy paster operation we don't need to create 2-D array, because after all 
+it will be stored sequencially in the memory and if we use the same algorithm for copying and 
+pasting, it won't make difference. */
 
 void copy_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[MAXHEIGHT*MAXWIDTH], int copy_top_left_x, 
                         int copy_top_left_y, int copy_bottom_right_x, int copy_bottom_right_y)
@@ -133,7 +145,6 @@ int paste_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[MAXHEIGHT*MAXWIDT
 void copy_area_for_rotate(int image[MAXHEIGHT][MAXWIDTH], int copied_area[MAXHEIGHT][MAXWIDTH], int copy_top_left_x, 
                         int copy_top_left_y, int copy_bottom_right_x, int copy_bottom_right_y)
 {
-    
     int i, j, k, m;
     k = m = 0;
     for (i = copy_top_left_y; i <= copy_bottom_right_y; i++) {
@@ -175,11 +186,12 @@ void rotate_area(int image[MAXHEIGHT][MAXWIDTH],int area_to_be_rotated[MAXHEIGHT
 {
     /* just a funny implementation */
     int my_cos(int degree), my_sin(int degree);
+    void print_array();
     int x, y, new_x, new_y, x_add, y_add;
     int color;
 
     /* correcting the rotation direction for the rotation matris */
-    if (rotation_direction == 'L') rotation_degree = 360 - rotation_degree;
+    if (rotation_direction == 'L' && rotation_degree != 0) rotation_degree = 360 - rotation_degree;
 
     /* normalizing the rotated array in itself */
     switch (rotation_degree)
@@ -202,8 +214,9 @@ void rotate_area(int image[MAXHEIGHT][MAXWIDTH],int area_to_be_rotated[MAXHEIGHT
             y_add = len-1;
             break;
         }        
-    
     default:
+            x_add = 0;
+            y_add = 0;
         break;
     }
 
@@ -222,6 +235,7 @@ void rotate_area(int image[MAXHEIGHT][MAXWIDTH],int area_to_be_rotated[MAXHEIGHT
         x = 0;
         y++;
     }
+
     return ;
 }
 
@@ -291,7 +305,7 @@ int main(void)
 {
     /* function declarations */
     int decide_color(int color_select[COORDINATE_DIMENSION], int image[MAXHEIGHT][MAXWIDTH]), my_sin(int degree), my_cos(int degree);
-    void fill_image(int image[MAXHEIGHT][MAXWIDTH], int y, int x, int color);
+    void fill_image(int image[MAXHEIGHT][MAXWIDTH], int y, int x, int color, int prev_color,int direction);
     void print_array(int array[MAXHEIGHT][MAXWIDTH]);
     void read_array(int array[MAXHEIGHT][MAXWIDTH]);
     void copy_area(int image[MAXHEIGHT][MAXWIDTH], int copied_area[], int copy_x1, int copy_y1, int copy_x2, int copy_y2);
@@ -302,7 +316,7 @@ int main(void)
                         int paste_top_left_y, int paste_bottom_right_x, int paste_bottom_right_y);
     void rotate_area(int image[MAXHEIGHT][MAXWIDTH],int area_to_be_rotated[MAXHEIGHT][MAXWIDTH], int helper[MAXHEIGHT][MAXWIDTH], 
                         char rotation_direction, int rotation_degree,int len);
-                        
+    
     /* variable declarations */
     int image[MAXHEIGHT][MAXWIDTH];
     char opcode;
@@ -328,15 +342,19 @@ int main(void)
                 scanf(" %d %d", &color_select[0], &color_select[1]);
                 scanf(" %d %d", &fill_coord[0], &fill_coord[1]);
 
-                /* decide color via given coordinates from the image */
-                color = decide_color(color_select, image);
+                {
+                    /* decide color via given coordinates from the image */
+                    color = decide_color(color_select, image);
 
-                /* actuate the filling */
-                fill_image(image, fill_coord[0], fill_coord[1], color);
+                    /* actuate the filling */
+                        /* the number 8 here is just a trivial number, which is not in the interval I=[0,7]. Because we should check
+                        every corner on the first filling operation, then we move one direction and then we'll keep track of the 
+                        last moved direction */
+                    fill_image(image, fill_coord[0], fill_coord[1], color, image[fill_coord[0]][fill_coord[1]],8);
 
-                /* print out the array after the process */
-                print_array(image);
-            
+                    /* print out the array after the process */
+                    print_array(image);
+                }
                 break;
             }
         case 'P':
@@ -400,7 +418,7 @@ int main(void)
 
                     /* copy area from the desired coordinates and pass it to the 1-dim array */
                     rotate_area(image, area_to_be_rotated, helper, rotation_direction, rotation_degree,copy_bottom_right_y-copy_top_left_y+1);
-
+                    
                     /* while pasting the pixels check if they are equal and return the affected pixels */
                     affected_pixels = paste_area_for_rotate(image, helper, paste_top_left_x, paste_top_left_y, paste_bottom_right_x, paste_bottom_right_y);
                     
@@ -416,6 +434,5 @@ int main(void)
         default:
             break;
     }  
-
     return 0;
 }
